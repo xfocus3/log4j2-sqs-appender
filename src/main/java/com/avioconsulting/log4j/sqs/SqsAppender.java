@@ -30,8 +30,11 @@ class SqsAppender extends AbstractAppender {
 		private String awsRegion;
 
 		@PluginBuilderAttribute
-		@Required(message = "No SQS Queue provided for SQSAppender")
 		private String queueName;
+
+		@PluginBuilderAttribute
+		@Required(message = "No SQS URL Queue provided for SQSAppender")
+		private String queueUrl="";
 
 		@PluginBuilderAttribute
 		private String largeMessageQueueName;
@@ -57,7 +60,7 @@ class SqsAppender extends AbstractAppender {
 		public SqsAppender build() {
 			logger.debug("Initializing SQS appender");
 			final SqsManager manager = new SqsManager(getConfiguration(), getConfiguration().getLoggerContext(),
-					getName(), awsRegion, awsAccessKey, awsSecretKey, queueName, largeMessageQueueName, maxBatchOpenMs, maxBatchSize, maxInflightOutboundBatches, maxMessageBytes, largeMessagesEnabled);
+					getName(), awsRegion, awsAccessKey, awsSecretKey, queueName,queueUrl, largeMessageQueueName, maxBatchOpenMs, maxBatchSize, maxInflightOutboundBatches, maxMessageBytes, largeMessagesEnabled);
 			return new SqsAppender(getName(), getLayout(), getFilter(), isIgnoreExceptions(), manager);
 		}
 
@@ -118,6 +121,15 @@ class SqsAppender extends AbstractAppender {
 
 		public B setQueueName(final String queueName) {
 			this.queueName = queueName;
+			return asBuilder();
+		}
+
+		public String getQueueUrl() {
+			 return queueUrl;
+		}
+
+		public B setQueueUrl(String queueUrl) {
+			this.queueUrl = queueUrl;
 			return asBuilder();
 		}
 

@@ -1,9 +1,14 @@
 package com.avioconsulting.log4j.sqs;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.buffered.QueueBufferConfig;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
@@ -51,6 +56,7 @@ public class SqsManager extends AbstractManager {
                          final String awsAccessKey,
                          final String awsSecretKey,
                          final String queueName,
+                         final String  queueUrl,
                          final String largeMessageQueueName,
                          final Integer maxBatchOpenMs,
                          final Integer maxBatchSize,
@@ -63,12 +69,13 @@ public class SqsManager extends AbstractManager {
         this.awsSecretKey = awsSecretKey;
         this.awsRegion = awsRegion;
         this.queueName = queueName;
-        this.largeMessageQueueName = largeMessageQueueName == null ? queueName.concat(".fifo") : largeMessageQueueName;
+        this.largeMessageQueueName = largeMessageQueueName == null ? queueUrl.concat(".fifo") : largeMessageQueueName;
         this.maxBatchOpenMs = maxBatchOpenMs == null ? 200 : maxBatchOpenMs;
         this.maxBatchSize = maxBatchSize == null ? 10 : maxBatchSize;
         this.maxInflightOutboundBatches = maxInflightOutboundBatches == null ? 5 : maxInflightOutboundBatches;
         this.maxMessageBytes = maxMessageBytes == null ? 250000 : maxMessageBytes;
         this.largeMessagesEnabled = largeMessagesEnabled != null && largeMessagesEnabled;
+        this.queueUrl =  queueUrl;
     }
 
     public Configuration getConfiguration() {
@@ -102,17 +109,27 @@ public class SqsManager extends AbstractManager {
                         logger.debug(String.format("Sending message %d of %d", i + 1, splitMessage.length));
                         SendMessageRequest request = new SendMessageRequest(this.largeMessageQueueUrl, String.format("currentPart=%d|totalParts=%d|uuid=%s|message=%s", i + 1, splitMessage.length, uuid, splitMessage[i]));
                         request.setMessageGroupId(uuid.toString());
-                        this.getClient().sendMessageAsync(request);
+                        this.getClients().sendMessage(request);
                     }
                 }
             } else {
                 SendMessageRequest request = new SendMessageRequest(this.queueUrl, message);
-                this.getClient().sendMessageAsync(request);
+                this.getClients().sendMessage(request);
             }
         } catch (Exception e) {
             logger.error("Failed to send message to SQS", e);
         }
     }
+
+    public AmazonSQS getClients() {
+        AWSCredentials credentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+        AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(credentials);
+        return AmazonSQSClientBuilder.standard()
+                .withCredentials(credentialsProvider)
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(this.queueUrl, "eu-central-1"))
+                .build();
+    }
+
 
     private AmazonSQSBufferedAsyncClient getClient() {
         if (this.client == null) {
@@ -124,17 +141,12 @@ public class SqsManager extends AbstractManager {
                 asyncClient = clientBuilder.withRegion(awsRegion).withCredentials(credentialsProvider).build();
                 QueueBufferConfig config = new QueueBufferConfig().withMaxBatchOpenMs(maxBatchOpenMs).withMaxBatchSize(maxBatchSize).withMaxInflightOutboundBatches(maxInflightOutboundBatches);
                 this.client = new AmazonSQSBufferedAsyncClient(asyncClient, config);
-                this.queueUrl = this.client.getQueueUrl(this.queueName).getQueueUrl();
-                if (largeMessagesEnabled) {
-                    logger.debug("Large Messages Enabled. Large Message Queue: " + this.largeMessageQueueName);
-                    this.largeMessageQueueUrl = this.client.getQueueUrl(this.largeMessageQueueName).getQueueUrl();
-                }
+               // this.queueUrl = this.client.getQueueUrl(this.queueName).getQueueUrl();
             } catch (Exception e) {
                 logger.error("Failed to initialize SQS Client", e);
                 throw e;
             }
         }
-
         return this.client;
     }
 

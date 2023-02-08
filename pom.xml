@@ -1,59 +1,31 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.avioconsulting</groupId>
+    <groupId>company</groupId>
     <artifactId>log4j2-sqs-appender</artifactId>
-    <version>1.1.0</version>
-
-    <name>${project.groupId}:${project.artifactId}</name>
-    <description>Log4j2 appender to allow publishing of log messages to Amazon SQS</description>
-    <url>https://github.com/avioconsulting/log4j2-sqs-appender</url>
+    <version>1.1.18</version>
 
     <properties>
-        <project.github.repository>avioconsulting/log4j2-sqs-appender</project.github.repository>
-        <repository.url>git@github.com:${project.github.repository}.git</repository.url>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <aws.sdk.version>1.12.181</aws.sdk.version>
+        <version>1.12.385</version>
         <log4j.version>2.17.2</log4j.version>
         <junit.version>4.13.2</junit.version>
-        <nexus.url>https://oss.sonatype.org</nexus.url>
     </properties>
 
     <developers>
         <developer>
-            <name>Adam DesJardin</name>
-            <email>adesjardin@avioconsulting.com</email>
-            <organization>AVIO Consulting</organization>
-            <organizationUrl>https://www.avioconsulting.com.com</organizationUrl>
-        </developer>
-        <developer>
-            <name>Adam Mead</name>
-            <email>amead@avioconsulting.com</email>
-            <organization>AVIO Consulting</organization>
-            <organizationUrl>https://www.avioconsulting.com.com</organizationUrl>
-        </developer>
-        <developer>
-            <name>Chakri Bonthala</name>
-            <email>cbonthala@avioconsulting.com</email>
-            <organization>AVIO Consulting</organization>
-            <organizationUrl>https://www.avioconsulting.com.com</organizationUrl>
+            <name>xfocus</name>
+            <email>xfocus10@gmail.com</email>
+            <organization>Consulting</organization>
+            <organizationUrl>https://noobs.tech</organizationUrl>
         </developer>
     </developers>
 
-    <organization>
-        <name>AVIO Consulting</name>
-        <url>https://www.avioconsulting.com</url>
-    </organization>
 
-    <licenses>
-        <license>
-            <name>BSD-2-Clause</name>
-            <url>https://opensource.org/licenses/BSD-2-Clause</url>
-        </license>
-    </licenses>
 
     <issueManagement>
         <system>github.com</system>
@@ -70,7 +42,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sqs</artifactId>
-            <version>${aws.sdk.version}</version>
+            <version>1.12.385</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -111,6 +83,16 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <distributionManagement>
+        <!-- Target Anypoint Organization Repository -->
+        <repository>
+            <id>exchange</id>
+            <name>Exchange2 Repository</name>
+            <url>https://maven.anypoint.mulesoft.com/api/v2/organizations/company/maven</url>
+            <layout>default</layout>
+        </repository>
+    </distributionManagement>
 
     <profiles>
         <profile>
@@ -164,52 +146,6 @@
                                 </configuration>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>${nexus.url}</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>gpg-sign</id>
-            <activation>
-                <property>
-                    <name>release</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <properties>
-                <gpg.executable>gpg</gpg.executable>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                                <phase>verify</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- Prevent gpg from using pinentry programs -->
-                            <gpgArguments>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
